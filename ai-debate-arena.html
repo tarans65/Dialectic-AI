@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Debate Arena</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05080f;
+    --bg2: #0b1120;
+    --bg3: #111827;
+    --border: rgba(56, 189, 248, 0.15);
+    --blue: #38bdf8;
+    --blue2: #0ea5e9;
+    --blue-glow: rgba(56, 189, 248, 0.25);
+    --red: #f43f5e;
+    --red-glow: rgba(244, 63, 94, 0.2);
+    --gold: #fbbf24;
+    --green: #34d399;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font-body: 'DM Sans', sans-serif;
+    --font-display: 'Bebas Neue', cursive;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Radial glow top */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(56,189,248,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 40px 0 20px;
+    text-align: center;
+    position: relative;
+  }
+
+  .arena-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--blue);
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 8px;
+  }
+
+  .arena-title {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 10vw, 96px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #fff 0%, var(--blue) 50%, #fff 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  .vs-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 16px 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .vs-bar .you-tag { color: var(--blue); }
+  .vs-bar .ai-tag { color: var(--red); }
+  .vs-bar .vs { 
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--gold);
+    padding: 2px 12px;
+    border: 1px solid rgba(251,191,36,0.3);
+    border-radius: 4px;
+  }
+
+  /* SETUP PANEL */
+  #setup-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s ease;
+  }
+
+  #setup-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  }
+
+  .setup-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .setup-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .topic-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .topic-input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-glow);
+  }
+
+  .topic-input::placeholder { color: var(--muted); }
+
+  .side-selector {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .side-btn {
+    padding: 14px 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.25s;
+    color: var(--muted);
+  }
+
+  .side-btn.for.active {
+    background: rgba(56,189,248,0.15);
+    color: var(--blue);
+    box-shadow: inset 0 0 20px rgba(56,189,248,0.1);
+  }
+
+  .side-btn.against.active {
+    background: rgba(244,63,94,0.15);
+    color: var(--red);
+    box-shadow: inset 0 0 20px rgba(244,63,94,0.1);
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--blue2), #0284c7);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .start-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: -100%;
+    width: 60px; height: 100%;
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-50%) skewX(-20deg);
+    transition: left 0.5s;
+  }
+
+  .start-btn:hover::before { left: 110%; }
+  .start-btn:hover { box-shadow: 0 8px 32px rgba(14,165,233,0.4); transform: translateY(-1px); }
+  .start-btn:active { transform: translateY(0); }
+
+  /* DEBATE ARENA */
+  #debate-arena {
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+  }
+
+  #debate-arena.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Topic bar */
+  .topic-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .topic-bar-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .topic-bar-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    text-align: center;
+    padding: 0 16px;
+  }
+
+  .side-badges {
+    display: flex;
+    gap: 8px;
+  }
+
+  .badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .badge.you { background: rgba(56,189,248,0.15); color: var(--blue); border: 1px solid rgba(56,189,248,0.3); }
+  .badge.ai { background: rgba(244,63,94,0.15); color: var(--red); border: 1px solid rgba(244,63,94,0.3); }
+
+  /* Round indicator */
+  .round-indicator {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .round-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.2);
+    padding: 6px 16px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  .pulse-dot {
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.6); }
+  }
+
+  /* Chat */
+  #chat-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 300px;
+    max-height: 480px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    scroll-behavior: smooth;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  #chat-box::-webkit-scrollbar { width: 4px; }
+  #chat-box::-webkit-scrollbar-track { background: transparent; }
+  #chat-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Messages */
+  .msg {
+    display: flex;
+    gap: 12px;
+    animation: msgIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+
+  .msg.user .msg-avatar {
+    background: rgba(56,189,248,0.15);
+    border: 1px solid rgba(56,189,248,0.3);
+    color: var(--blue);
+  }
+
+  .msg.ai .msg-avatar {
+    background: rgba(244,63,94,0.15);
+    border: 1px solid rgba(244,63,94,0.3);
+    color: var(--red);
+  }
+
+  .msg-content { max-width: 78%; }
+
+  .msg-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .msg.user .msg-meta { flex-direction: row-reverse; }
+  .msg.user .msg-meta .sender { color: var(--blue); }
+  .msg.ai .msg-meta .sender { color: var(--red); }
+  .msg-meta .tag { color: var(--muted); font-size: 9px; }
+
+  .msg-bubble {
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .msg.user .msg-bubble {
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.2);
+    border-top-right-radius: 4px;
+    color: #cbd5e1;
+  }
+
+  .msg.ai .msg-bubble {
+    background: rgba(244,63,94,0.06);
+    border: 1px solid rgba(244,63,94,0.15);
+    border-top-left-radius: 4px;
+    color: #e2e8f0;
+  }
+
+  .msg.ai .msg-bubble strong {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  .msg-bubble .keyword-hit {
+    background: rgba(251,191,36,0.15);
+    color: var(--gold);
+    padding: 0 4px;
+    border-radius: 3px;
+    font-size: 13px;
+  }
+
+  /* Typing indicator */
+  .typing-msg .msg-bubble {
+    padding: 16px 20px;
+  }
+
+  .typing-dots {
+    display: flex; gap: 5px; align-items: center;
+  }
+
+  .typing-dots span {
+    width: 7px; height: 7px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: typingDot 1.2s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingDot {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Input area */
+  .input-area {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    transition: border-color 0.3s;
+  }
+
+  .input-area:focus-within {
+    border-color: rgba(56,189,248,0.4);
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.06);
+  }
+
+  .argument-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    resize: none;
+    outline: none;
+    min-height: 72px;
+    line-height: 1.6;
+  }
+
+  .argument-input::placeholder { color: var(--muted); }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .strength-meter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .strength-bar-track {
+    width: 80px; height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .strength-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--green));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .submit-btn {
+    padding: 10px 24px;
+    background: transparent;
+    border: 1px solid rgba(56,189,248,0.4);
+    border-radius: 8px;
+    color: var(--blue);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .submit-btn:hover {
+    background: rgba(56,189,248,0.1);
+    box-shadow: 0 0 20px rgba(56,189,248,0.2);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* SCORECARD */
+  #scorecard {
+    display: none;
+    background: var(--bg2);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+    animation: scorecardIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes scorecardIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  #scorecard::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .scorecard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .scorecard-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+
+  .round-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .scores-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .scorer {
+    background: var(--bg3);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .scorer-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scorer-name.you { color: var(--blue); }
+  .scorer-name.ai { color: var(--red); }
+
+  .score-row {
+    margin-bottom: 12px;
+  }
+
+  .score-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .score-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .score-val {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .score-track {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 1.2s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .score-fill.you-fill { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+  .score-fill.ai-fill { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .total-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .total-score {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+
+  .total-score.you { color: var(--blue); }
+  .total-score.ai { color: var(--red); }
+
+  /* Winner banner */
+  .winner-banner {
+    margin-top: 16px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+
+  .winner-banner.lead-you {
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.2);
+    color: var(--blue);
+  }
+
+  .winner-banner.lead-ai {
+    background: rgba(244,63,94,0.08);
+    border: 1px solid rgba(244,63,94,0.2);
+    color: var(--red);
+  }
+
+  .winner-banner.tied {
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.2);
+    color: var(--gold);
+  }
+
+  /* New debate btn */
+  .new-debate-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+  }
+
+  .new-debate-btn:hover {
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text);
+  }
+
+  /* Separator */
+  .section-sep {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
+    opacity: 0.3;
+  }
+  .section-sep::before, .section-sep::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-sep span {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* Responsive */
+  @media (max-width: 580px) {
+    .scores-grid { grid-template-columns: 1fr; }
+    .setup-row { flex-direction: column; }
+    .side-selector { align-self: flex-start; }
+    .topic-bar { flex-direction: column; text-align: center; }
+    .topic-bar-text { padding: 0; }
+  }
+
+  /* Glitch anim on title hover */
+  .arena-title:hover {
+    animation: glitch 0.3s steps(2) infinite, shimmer 4s linear infinite;
+  }
+
+  @keyframes glitch {
+    0% { text-shadow: 2px 0 var(--red), -2px 0 var(--blue); }
+    50% { text-shadow: -2px 0 var(--red), 2px 0 var(--blue); }
+    100% { text-shadow: 2px 0 var(--red), -2px 0 var(--blue); }
+  }
+
+  /* System message */
+  .sys-msg {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding: 8px;
+    text-transform: uppercase;
+  }
+
+  .sys-msg span {
+    background: rgba(255,255,255,0.04);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="arena-label">⚡ Live Intellectual Combat System</div>
+    <h1 class="arena-title">AI Debate<br>Arena</h1>
+    <div class="vs-bar">
+      <span class="you-tag">YOU</span>
+      <span class="vs">VS</span>
+      <span class="ai-tag">SYNTHETIC OPPONENT</span>
+    </div>
+  </header>
+
+  <!-- Setup Panel -->
+  <div id="setup-panel">
+    <div class="setup-title">// Initialize Debate Parameters</div>
+    <div class="setup-row">
+      <input class="topic-input" id="topic-input" type="text" placeholder="Enter debate topic… (e.g. 'Social media is harmful to democracy')" maxlength="120">
+      <div class="side-selector">
+        <button class="side-btn for active" id="btn-for" onclick="selectSide('for')">FOR</button>
+        <button class="side-btn against" id="btn-against" onclick="selectSide('against')">AGAINST</button>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startDebate()">▶ ENTER THE ARENA</button>
+  </div>
+
+  <!-- Debate Arena -->
+  <div id="debate-arena">
+
+    <div class="topic-bar" id="topic-bar">
+      <div>
+        <div class="topic-bar-label">Topic</div>
+      </div>
+      <div class="topic-bar-text" id="topic-display"></div>
+      <div class="side-badges">
+        <span class="badge you" id="badge-you">YOU: FOR</span>
+        <span class="badge ai" id="badge-ai">AI: AGAINST</span>
+      </div>
+    </div>
+
+    <div class="round-indicator">
+      <div class="round-badge">
+        <div class="pulse-dot"></div>
+        <span id="round-label">ROUND 1 — OPENING STATEMENTS</span>
+      </div>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <!-- Scorecard (shown every 2 rounds) -->
+    <div id="scorecard">
+      <div class="scorecard-header">
+        <div class="scorecard-title">⚖ DEBATE SCORECARD</div>
+        <div class="round-label" id="scorecard-round-label">After Round 2</div>
+      </div>
+      <div class="scores-grid">
+        <div class="scorer">
+          <div class="scorer-name you">◆ You</div>
+          <div class="score-row">
+            <div class="score-label-row"><span class="score-label">Logic</span><span class="score-val" id="u-logic">0</span></div>
+            <div class="score-track"><div class="score-fill you-fill" id="u-logic-bar"></div></div>
+          </div>
+          <div class="score-row">
+            <div class="score-label-row"><span class="score-label">Clarity</span><span class="score-val" id="u-clarity">0</span></div>
+            <div class="score-track"><div class="score-fill you-fill" id="u-clarity-bar"></div></div>
+          </div>
+          <div class="score-row">
+            <div class="score-label-row"><span class="score-label">Persuasion</span><span class="score-val" id="u-persuasion">0</span></div>
+            <div class="score-track"><div class="score-fill you-fill" id="u-persuasion-bar"></div></div>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Total</span>
+            <span class="total-score you" id="u-total">0</span>
+          </div>
+        </div>
+        <div class="scorer">
+          <div class="scorer-name ai">◆ AI Opponent</div>
+          <div class="score-row">
+            <div class="score-label-row"><span class="score-label">Logic</span><span class="score-val" id="a-logic">0</span></div>
+            <div class="score-track"><div class="score-fill ai-fill" id="a-logic-bar"></div></div>
+          </div>
+          <div class="score-row">
+            <div class="score-label-row"><span class="score-label">Clarity</span><span class="score-val" id="a-clarity">0</span></div>
+            <div class="score-track"><div class="score-fill ai-fill" id="a-clarity-bar"></div></div>
+          </div>
+          <div class="score-row">
+            <div class="score-label-row"><span class="score-label">Persuasion</span><span class="score-val" id="a-persuasion">0</span></div>
+            <div class="score-track"><div class="score-fill ai-fill" id="a-persuasion-bar"></div></div>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Total</span>
+            <span class="total-score ai" id="a-total">0</span>
+          </div>
+        </div>
+      </div>
+      <div class="winner-banner" id="winner-banner"></div>
+    </div>
+
+    <div class="input-area" id="input-area">
+      <textarea class="argument-input" id="argument-input" placeholder="Make your case… Use evidence, examples, and reasoning. The stronger your argument, the higher your score." rows="3"></textarea>
+      <div class="input-footer">
+        <div class="strength-meter">
+          <span>ARGUMENT STRENGTH</span>
+          <div class="strength-bar-track">
+            <div class="strength-bar-fill" id="strength-fill"></div>
+          </div>
+          <span id="strength-label">—</span>
+        </div>
+        <button class="submit-btn" id="submit-btn" onclick="submitArgument()">Submit ↵</button>
+      </div>
+    </div>
+
+    <button class="new-debate-btn" onclick="resetDebate()">↺ NEW DEBATE</button>
+
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let state = {
+  topic: '',
+  userSide: 'for', // 'for' or 'against'
+  aiSide: 'against',
+  round: 0,
+  isTyping: false,
+  userArgs: [],   // [{text, score}]
+  aiArgs: [],
+  cumulativeUserScore: { logic: 0, clarity: 0, persuasion: 0 },
+  cumulativeAiScore:   { logic: 0, clarity: 0, persuasion: 0 },
+  scorecardShown: 0,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIDE SELECTION
+// ─────────────────────────────────────────────────────────────────────────────
+function selectSide(side) {
+  state.userSide = side;
+  document.getElementById('btn-for').classList.toggle('active', side === 'for');
+  document.getElementById('btn-against').classList.toggle('active', side === 'against');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// START
+// ─────────────────────────────────────────────────────────────────────────────
+function startDebate() {
+  const topic = document.getElementById('topic-input').value.trim();
+  if (!topic) {
+    document.getElementById('topic-input').focus();
+    document.getElementById('topic-input').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('topic-input').style.borderColor = '', 1200);
+    return;
+  }
+  state.topic = topic;
+  state.aiSide = state.userSide === 'for' ? 'against' : 'for';
+  state.round = 0;
+  state.userArgs = [];
+  state.aiArgs = [];
+  state.cumulativeUserScore = { logic: 0, clarity: 0, persuasion: 0 };
+  state.cumulativeAiScore   = { logic: 0, clarity: 0, persuasion: 0 };
+  state.scorecardShown = 0;
+
+  // Update UI
+  document.getElementById('topic-display').textContent = `"${topic}"`;
+  document.getElementById('badge-you').textContent = `YOU: ${state.userSide.toUpperCase()}`;
+  document.getElementById('badge-ai').textContent  = `AI: ${state.aiSide.toUpperCase()}`;
+  document.getElementById('setup-panel').style.display = 'none';
+
+  const arena = document.getElementById('debate-arena');
+  arena.style.display = 'block';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => arena.classList.add('visible'));
+  });
+
+  document.getElementById('chat-box').innerHTML = '';
+  document.getElementById('scorecard').style.display = 'none';
+  document.getElementById('argument-input').value = '';
+  updateStrengthMeter('');
+
+  // AI opens
+  setTimeout(() => {
+    addSysMessage('DEBATE COMMENCED — ROUND 1 OPENING STATEMENTS');
+    setTimeout(() => aiSpeak('opening', null), 600);
+  }, 400);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHAT HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function addSysMessage(text) {
+  const box = document.getElementById('chat-box');
+  const div = document.createElement('div');
+  div.className = 'sys-msg';
+  div.innerHTML = `<span>${text}</span>`;
+  box.appendChild(div);
+  scrollChat();
+}
+
+function addMessage(role, text, tag='') {
+  const box = document.getElementById('chat-box');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const avatar = role === 'user' ? 'YOU' : 'AI';
+  const sideLabel = role === 'user'
+    ? state.userSide.toUpperCase()
+    : state.aiSide.toUpperCase();
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-content">
+      <div class="msg-meta">
+        <span class="sender">${avatar}</span>
+        <span class="tag">${tag || sideLabel}</span>
+      </div>
+      <div class="msg-bubble">${text}</div>
+    </div>`;
+  box.appendChild(div);
+  scrollChat();
+}
+
+function addTypingIndicator() {
+  const box = document.getElementById('chat-box');
+  const div = document.createElement('div');
+  div.className = 'msg ai typing-msg';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="msg-avatar">AI</div>
+    <div class="msg-content">
+      <div class="msg-meta"><span class="sender">AI</span><span class="tag">THINKING...</span></div>
+      <div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+    </div>`;
+  box.appendChild(div);
+  scrollChat();
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function scrollChat() {
+  const box = document.getElementById('chat-box');
+  box.scrollTop = box.scrollHeight;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STRENGTH METER
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('argument-input').addEventListener('input', function() {
+  updateStrengthMeter(this.value);
+});
+
+document.getElementById('argument-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitArgument();
+});
+
+function updateStrengthMeter(text) {
+  const s = scoreText(text);
+  const pct = Math.min(100, Math.round((s.logic + s.clarity + s.persuasion) / 30 * 100));
+  document.getElementById('strength-fill').style.width = pct + '%';
+  const labels = ['—', 'WEAK', 'FAIR', 'SOLID', 'STRONG', 'FORMIDABLE'];
+  const idx = Math.min(5, Math.floor(pct / 20));
+  document.getElementById('strength-label').textContent = labels[idx];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCORING ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+const EVIDENCE_WORDS = ['because','therefore','since','thus','consequently','data','studies','research','evidence','shows','according','statistics','proves','demonstrates','analysis','report','survey','facts','historically','scientifically','logically','argument','premise','conclude','whereas'];
+const CLARITY_WORDS = ['first','second','third','furthermore','however','moreover','nevertheless','in contrast','specifically','for example','for instance','in other words','to illustrate','clearly','notably','importantly','ultimately'];
+const PERSUASION_WORDS = ['must','should','vital','crucial','essential','dangerous','harmful','beneficial','significant','undeniable','obvious','clear','proven','without doubt','fundamentally','necessarily','compellingly'];
+
+function scoreText(text) {
+  if (!text || text.length < 10) return { logic: 0, clarity: 0, persuasion: 0 };
+  const t = text.toLowerCase();
+  const words = t.split(/\s+/).length;
+
+  let logic = Math.min(10, 3 + EVIDENCE_WORDS.filter(w => t.includes(w)).length * 0.9 + Math.min(3, words / 25));
+  let clarity = Math.min(10, 2 + CLARITY_WORDS.filter(w => t.includes(w)).length * 1.2 + Math.min(3, words / 30));
+  let persuasion = Math.min(10, 2 + PERSUASION_WORDS.filter(w => t.includes(w)).length * 1.1 + (words > 40 ? 2 : 0) + (words > 80 ? 1 : 0));
+
+  return {
+    logic: parseFloat(logic.toFixed(1)),
+    clarity: parseFloat(clarity.toFixed(1)),
+    persuasion: parseFloat(persuasion.toFixed(1))
+  };
+}
+
+// AI always scores slightly higher as the "champion"
+function aiBaseScore() {
+  return {
+    logic: parseFloat((6 + Math.random() * 2).toFixed(1)),
+    clarity: parseFloat((6 + Math.random() * 2).toFixed(1)),
+    persuasion: parseFloat((6.5 + Math.random() * 1.5).toFixed(1))
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI RESPONSE ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+const FALLACY_CALLOUTS = [
+  "That reasoning commits a classic {fallacy}. Correlation does not imply causation — the link you're drawing requires far more rigorous evidence.",
+  "Notice the {fallacy} lurking in your argument. You're assuming the conclusion before establishing the premise.",
+  "This is a textbook {fallacy}. The relationship between your cause and effect hasn't been demonstrated.",
+  "Your claim exhibits the {fallacy} — a rhetorical sleight of hand that sidesteps the actual evidence."
+];
+
+const FALLACIES = ['slippery slope fallacy', 'appeal to authority', 'false dichotomy', 'hasty generalization', 'straw man', 'ad hominem fallacy', 'circular reasoning', 'appeal to emotion'];
+
+const REBUTTAL_OPENERS = [
+  "Your argument fundamentally misunderstands the issue.",
+  "That point, while superficially appealing, collapses under scrutiny.",
+  "The premise here is flawed from the outset.",
+  "Let's dissect what you've actually claimed here.",
+  "This argument proves far less than you think it does.",
+  "The evidence points in precisely the opposite direction.",
+  "You're conflating two distinct issues entirely.",
+  "That claim has been repeatedly challenged in the literature.",
+];
+
+const COUNTER_POINTS = [
+  "Furthermore, consider the systemic implications: {tp} has been shown to {effect} in virtually every documented case.",
+  "The data is unambiguous — {tp} correlates strongly with {negative}, which fundamentally undermines your position.",
+  "Studies consistently demonstrate that {tp} produces outcomes that are {outcome}, regardless of the conditions you described.",
+  "Historical precedent is clear: every time {tp} has been implemented as you suggest, the result has been {negative}.",
+  "Independent analysis reveals that {tp} cannot achieve the goals you've outlined without {condition}.",
+  "The economic, social, and ethical dimensions of {tp} point unanimously toward {outcome}.",
+  "Research from leading institutions confirms that {tp} {effect} — a finding your argument conveniently ignores.",
+  "Critical thinking demands we ask: who actually benefits from the narrative surrounding {tp}? The answer reveals the flaw in your reasoning."
+];
+
+const EFFECTS_FOR = ['produce measurable harm', 'undermine democratic values', 'create dangerous precedents', 'concentrate power inappropriately', 'restrict fundamental freedoms', 'exacerbate existing inequalities'];
+const EFFECTS_AGAINST = ['deliver demonstrable benefits', 'strengthen institutional integrity', 'promote individual autonomy', 'advance evidence-based outcomes', 'protect vulnerable populations', 'create sustainable solutions'];
+const NEGATIVES_FOR = ['erosion of civil liberties', 'systemic bias', 'unintended consequences', 'regulatory capture', 'institutional failure', 'public distrust'];
+const NEGATIVES_AGAINST = ['missed opportunities', 'stagnation', 'ideological rigidity', 'overlooked evidence', 'short-term thinking', 'failure to adapt'];
+const OUTCOMES_FOR = ['deeply problematic', 'counterproductive at best', 'ethically indefensible', 'demonstrably ineffective'];
+const OUTCOMES_AGAINST = ['broadly beneficial', 'consistently positive', 'evidence-supported', 'strategically sound'];
+
+const OPENING_FOR = [
+  "The case {against} {tp} rests on a fundamental misreading of the evidence. {tp} demonstrably {effect} — a conclusion supported by rigorous empirical analysis, not ideology. Those who argue otherwise must contend with decades of research that consistently refutes their position. This is not a matter of opinion; it is a question of evidence, and the evidence is unambiguous.",
+  "I take the position {against} {tp} based on first principles and empirical reality. The proponents of {tp} ask you to ignore {negative} — a convenient omission that reveals the weakness of their case. When we examine the full spectrum of data, one conclusion becomes inescapable: {tp} is {outcome}.",
+  "Standing firmly {against} {tp}, I challenge my opponent to justify their position in the face of overwhelming contrary evidence. The record shows that {tp} {effect}. This is not conjecture; it is documented fact. The burden of proof lies with those who advocate for something so clearly {outcome}."
+];
+
+const OPENING_AGAINST = [
+  "The argument {for} {tp} rests on assumptions that simply do not withstand scrutiny. Every serious examination of the evidence reveals that {tp} {effect} — a reality that proponents of this position choose to overlook. The truth is {outcome}, and no rhetorical flourish can change that fundamental reality.",
+  "I stand {for} {tp} because the evidence is categorical. Claims that {tp} causes {negative} are ideologically motivated, not evidence-based. The data tells a different story — one of {effect}. My opponent will need to address this head-on rather than relying on anecdote.",
+  "The case {for} {tp} is straightforward and well-documented. Research repeatedly confirms that {tp} {effect}. The opposition's narrative of {negative} is a misrepresentation that crumbles under factual analysis."
+];
+
+function aiSpeak(type, userText) {
+  if (state.isTyping) return;
+  state.isTyping = true;
+  document.getElementById('submit-btn').disabled = true;
+
+  addTypingIndicator();
+  const delay = 1200 + Math.random() * 1000;
+
+  setTimeout(() => {
+    removeTypingIndicator();
+    const response = generateAIResponse(type, userText);
+    addMessage('ai', response);
+    state.isTyping = false;
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('argument-input').focus();
+    updateRoundLabel();
+    scrollChat();
+  }, delay);
+}
+
+function generateAIResponse(type, userText) {
+  const tp = state.topic;
+  const side = state.aiSide;
+  const effects = side === 'against' ? EFFECTS_FOR : EFFECTS_AGAINST;
+  const negatives = side === 'against' ? NEGATIVES_FOR : NEGATIVES_AGAINST;
+  const outcomes = side === 'against' ? OUTCOMES_FOR : OUTCOMES_AGAINST;
+
+  const rnd = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const fill = (s) => s
+    .replace(/{tp}/g, `<strong>"${tp}"</strong>`)
+    .replace(/{for}/g, side === 'against' ? 'against' : 'for')
+    .replace(/{against}/g, side === 'against' ? 'against' : 'for')
+    .replace(/{effect}/g, rnd(effects))
+    .replace(/{negative}/g, rnd(negatives))
+    .replace(/{outcome}/g, rnd(outcomes))
+    .replace(/{condition}/g, `significant systemic reforms`);
+
+  if (type === 'opening') {
+    const template = side === 'against' ? rnd(OPENING_FOR) : rnd(OPENING_AGAINST);
+    return fill(template);
+  }
+
+  // Rebuttal: keyword-aware
+  let rebuttal = rnd(REBUTTAL_OPENERS) + ' ';
+
+  // Keyword detection
+  const ut = (userText || '').toLowerCase();
+  const keywordHits = [];
+
+  const keywordMap = {
+    'freedom|liberty|rights': `You invoke freedom, yet fail to specify which freedoms — or for whom. <strong>Freedom without accountability</strong> is merely license, and the unregulated pursuit of ${tp.split(' ').slice(0,3).join(' ')} threatens the very freedoms you claim to champion.`,
+    'economy|money|cost|jobs|growth': `The economic argument you're presenting is a false economy. Short-term gains from <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> mask long-term structural costs that economists consistently warn against.`,
+    'people|society|community|public|everyone': `Your appeal to collective benefit is undermined by the evidence. The populations most affected by <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> are precisely those your position claims to help.`,
+    'science|research|studies|data|evidence|proven': `You cite evidence, yet cherry-pick findings. The broader scientific consensus on <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> runs counter to the narrative you're constructing.`,
+    'history|historical|past|always|never|traditionally': `Historical precedent cuts both ways. The historical record on <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> shows a more nuanced picture than your selective reading suggests.`,
+    'moral|ethical|right|wrong|value|principle': `Moral arguments require moral consistency. If we accept your ethical framework for <strong>${tp.split(' ').slice(0,3).join(' ')}</strong>, we must also accept its logical consequences — which your position notably avoids.`,
+    'government|policy|law|regulation|control': `The policy implications of your argument are significant. Government intervention in <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> has a documented track record that contradicts your optimistic framing.`,
+    'children|future|generation|young': `Appeals to future generations deserve rigorous scrutiny. The long-term trajectory of <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> will burden the very people you claim to protect.`,
+    'natural|nature|environment|climate|planet': `The environmental dimension of this debate is complex. Naturalistic reasoning cannot substitute for empirical analysis of how <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> actually functions in real-world conditions.`,
+    'technology|innovation|progress|modern': `Technological progress is not inherently beneficial. The assumption that innovation in <strong>${tp.split(' ').slice(0,3).join(' ')}</strong> automatically produces good outcomes is precisely the kind of uncritical thinking that leads to systemic failures.`,
+  };
+
+  let matched = false;
+  for (const [pattern, response] of Object.entries(keywordMap)) {
+    if (new RegExp(pattern).test(ut)) {
+      rebuttal += response + ' ';
+      matched = true;
+      break;
+    }
+  }
+
+  if (!matched) {
+    // Fallacy callout
+    const fallacy = rnd(FALLACIES);
+    const fallacyCallout = rnd(FALLACY_CALLOUTS).replace('{fallacy}', `<strong>${fallacy}</strong>`);
+    rebuttal += fallacyCallout + ' ';
+  }
+
+  // Add counter-point
+  rebuttal += '<br><br>' + fill(rnd(COUNTER_POINTS));
+
+  // Every 3rd response add a challenge
+  if (state.round % 3 === 0) {
+    rebuttal += `<br><br>I challenge my opponent to address this directly: if ${fill('{tp}')} is truly ${state.userSide === 'for' ? 'beneficial' : 'problematic'} as claimed, why does the evidence consistently show ${fill('{effect}')}? The debate rests on this single unanswered question.`;
+  }
+
+  return rebuttal;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUBMIT ARGUMENT
+// ─────────────────────────────────────────────────────────────────────────────
+function submitArgument() {
+  const input = document.getElementById('argument-input');
+  const text = input.value.trim();
+  if (!text || state.isTyping) return;
+  if (text.length < 10) {
+    input.style.borderColor = 'var(--red)';
+    setTimeout(() => input.style.borderColor = '', 1200);
+    return;
+  }
+
+  state.round++;
+  const score = scoreText(text);
+  state.userArgs.push({ text, score });
+  state.cumulativeUserScore.logic       += score.logic;
+  state.cumulativeUserScore.clarity     += score.clarity;
+  state.cumulativeUserScore.persuasion  += score.persuasion;
+
+  const tag = `ROUND ${state.round} — ${state.userSide.toUpperCase()}`;
+  addMessage('user', escapeHTML(text), tag);
+  input.value = '';
+  updateStrengthMeter('');
+
+  // AI score for this round
+  const aiScore = aiBaseScore();
+  state.aiArgs.push({ score: aiScore });
+  state.cumulativeAiScore.logic       += aiScore.logic;
+  state.cumulativeAiScore.clarity     += aiScore.clarity;
+  state.cumulativeAiScore.persuasion  += aiScore.persuasion;
+
+  // Show scorecard every 2 rounds
+  if (state.round % 2 === 0) {
+    setTimeout(() => showScorecard(), 2500);
+  }
+
+  // AI rebuttal
+  aiSpeak('rebuttal', text);
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function updateRoundLabel() {
+  const labels = ['OPENING STATEMENTS', 'REBUTTAL PHASE', 'CROSS-EXAMINATION', 'CLOSING ARGUMENTS'];
+  const idx = Math.min(labels.length - 1, Math.floor(state.round / 2));
+  document.getElementById('round-label').textContent = `ROUND ${state.round + 1} — ${labels[idx]}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCORECARD
+// ─────────────────────────────────────────────────────────────────────────────
+function showScorecard() {
+  const rounds = state.round;
+  const n = Math.max(1, state.userArgs.length);
+
+  const us = {
+    logic:      Math.min(10, parseFloat((state.cumulativeUserScore.logic / n).toFixed(1))),
+    clarity:    Math.min(10, parseFloat((state.cumulativeUserScore.clarity / n).toFixed(1))),
+    persuasion: Math.min(10, parseFloat((state.cumulativeUserScore.persuasion / n).toFixed(1))),
+  };
+  const as = {
+    logic:      Math.min(10, parseFloat((state.cumulativeAiScore.logic / n).toFixed(1))),
+    clarity:    Math.min(10, parseFloat((state.cumulativeAiScore.clarity / n).toFixed(1))),
+    persuasion: Math.min(10, parseFloat((state.cumulativeAiScore.persuasion / n).toFixed(1))),
+  };
+
+  const uTotal = +(us.logic + us.clarity + us.persuasion).toFixed(1);
+  const aTotal = +(as.logic + as.clarity + as.persuasion).toFixed(1);
+
+  // Set values
+  setScore('u-logic', us.logic, 'u-logic-bar');
+  setScore('u-clarity', us.clarity, 'u-clarity-bar');
+  setScore('u-persuasion', us.persuasion, 'u-persuasion-bar');
+  setScore('a-logic', as.logic, 'a-logic-bar');
+  setScore('a-clarity', as.clarity, 'a-clarity-bar');
+  setScore('a-persuasion', as.persuasion, 'a-persuasion-bar');
+  document.getElementById('u-total').textContent = uTotal;
+  document.getElementById('a-total').textContent = aTotal;
+  document.getElementById('scorecard-round-label').textContent = `After Round ${rounds}`;
+
+  const wb = document.getElementById('winner-banner');
+  if (Math.abs(uTotal - aTotal) < 1) {
+    wb.textContent = '⚖ CLOSELY CONTESTED — PUSH HARDER';
+    wb.className = 'winner-banner tied';
+  } else if (uTotal > aTotal) {
+    wb.textContent = '🏆 YOU\'RE LEADING — MAINTAIN PRESSURE';
+    wb.className = 'winner-banner lead-you';
+  } else {
+    wb.textContent = '⚡ AI LEADS — RAISE YOUR GAME';
+    wb.className = 'winner-banner lead-ai';
+  }
+
+  const sc = document.getElementById('scorecard');
+  sc.style.display = 'block';
+  setTimeout(() => {
+    sc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 200);
+}
+
+function setScore(valId, val, barId) {
+  document.getElementById(valId).textContent = val;
+  setTimeout(() => {
+    document.getElementById(barId).style.width = (val / 10 * 100) + '%';
+  }, 200);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESET
+// ─────────────────────────────────────────────────────────────────────────────
+function resetDebate() {
+  document.getElementById('debate-arena').style.display = 'none';
+  document.getElementById('debate-arena').classList.remove('visible');
+  document.getElementById('setup-panel').style.display = 'block';
+  document.getElementById('topic-input').value = '';
+  document.getElementById('topic-input').focus();
+  state.isTyping = false;
+}
+</script>
+</body>
+</html>
