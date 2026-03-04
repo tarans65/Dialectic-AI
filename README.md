@@ -22,7 +22,7 @@ You enter any debate topic and pick whether you're arguing FOR or AGAINST it. Th
 
 ## How the Code Works
 
-The entire app lives in a single `ai-debate-arena.html` file — no framework, no backend, no build step.
+The entire app lives in a single `ai-debate-arena.html` file.
 
 ### Response Engine
 The AI opponent is powered by a rule-based response engine in JavaScript. It scans your text for keywords across 10 semantic clusters:
@@ -89,9 +89,6 @@ Or just double-click `ai-debate-arena.html` directly in your browser.
 
 ---
 
-## License
-
-MIT
 
 ---
 
