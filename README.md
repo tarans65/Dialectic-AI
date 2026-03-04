@@ -2,8 +2,6 @@
 
 > Sharpen your argument. Challenge your thinking. Win the room.
 
-![Status](https://img.shields.io/badge/status-active-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue) ![No dependencies](https://img.shields.io/badge/dependencies-none-orange)
-
 ---
 
 ## Motivation
