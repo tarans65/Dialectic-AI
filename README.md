@@ -1,6 +1,6 @@
 # ⚡ Dialectic AI
 
-> Sharpen your argument. Challenge your thinking. Win the room.
+> Sharpen your argument. 
 
 ---
 
